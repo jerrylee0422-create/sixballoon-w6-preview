@@ -953,8 +953,9 @@ a {
  *   iframe은 언제나 최대 하나다. Playlist index · YouTube IFrame API는 쓰지 않는다(W6 Y2/Y3).
  * - 등록된 Product 중 하나라도 Playlist가 없으면 Viewer 전체를 숨긴 채로 둔다(W6 B-3) —
  *   빈 Viewer를 남기지 않고, Product를 넘겨도 아래 Notice Area가 움직이지 않는다.
- * - 무음 자동재생(autoplay=1 · mute=1): 페이지에 들어오자마자 현재 Product의 Shorts가 움직인다.
- *   소리 있는 자동재생은 사용자 입력 전에는 브라우저가 막는다(S25 확인). 그 밖의 제한은 그대로 둔다.
+ * - 자동재생: 페이지에 들어오자마자 현재 Product의 Shorts가 무음(mute=1)으로 움직인다 — 소리 있는
+ *   자동재생은 사용자 입력 전에는 브라우저가 막는다(S25 확인). 사용자가 페이지를 한 번이라도 누른 뒤
+ *   Product를 바꾸면 새 Shorts는 소리를 켠 채 재생한다. 그 밖의 제한은 그대로 둔다.
  */
 (function () {
   "use strict";
@@ -983,7 +984,10 @@ a {
     if (!module || module.dataset.playlist === current) return;
     current = module.dataset.playlist;
     var iframe = document.createElement("iframe");
-    iframe.src = EMBED + "?list=" + encodeURIComponent(current) + "&autoplay=1&mute=1&playsinline=1&loop=1&rel=0";
+    // 사용자가 아직 페이지를 누른 적이 없으면 무음으로 시작한다(브라우저가 소리 있는 자동재생을 막는다).
+    // 한 번이라도 누른 뒤에 만드는 iframe은 소리를 켠 채 재생한다.
+    var touched = navigator.userActivation && navigator.userActivation.hasBeenActive;
+    iframe.src = EMBED + "?list=" + encodeURIComponent(current) + "&autoplay=1" + (touched ? "" : "&mute=1") + "&playsinline=1&loop=1&rel=0";
     iframe.title = "Shorts · " + productName(module);
     iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
     // Referer가 없으면 YouTube가 재생을 거부한다(Error 153).
